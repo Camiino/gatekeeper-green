@@ -305,7 +305,7 @@ export default function OrderViewPage() {
 
       <div className="max-w-6xl mx-auto p-4 lg:p-8 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Order Details (Read-only) */}
+          {/* Order Details */}
           <Card>
             <CardHeader>
               <CardTitle>Order Details</CardTitle>
@@ -313,46 +313,103 @@ export default function OrderViewPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <Label>Customer Name</Label>
-                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
-                    {order.customerName}
-                  </div>
+                  <Label htmlFor="customer-name">Customer Name</Label>
+                  {order.type === 'quick-sale' ? (
+                    <Input
+                      id="customer-name"
+                      value={order.customerName}
+                      onChange={(e) => updateOrder({ customerName: e.target.value })}
+                      className="hgm-input mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
+                      {order.customerName}
+                    </div>
+                  )}
                 </div>
                 
                 <div>
-                  <Label>Supplier</Label>
-                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
-                    {order.supplierName}
-                  </div>
+                  <Label htmlFor="supplier">Supplier</Label>
+                  {order.type === 'quick-sale' ? (
+                    <Input
+                      id="supplier"
+                      value={order.supplierName}
+                      onChange={(e) => updateOrder({ supplierName: e.target.value })}
+                      className="hgm-input mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
+                      {order.supplierName}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Product</Label>
-                    <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
-                      {order.productName}
-                    </div>
+                    <Label htmlFor="product">Product</Label>
+                    {order.type === 'quick-sale' ? (
+                      <Input
+                        id="product"
+                        value={order.productName}
+                        onChange={(e) => updateOrder({ productName: e.target.value })}
+                        className="hgm-input mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
+                        {order.productName}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <Label>Bags Count</Label>
+                    <Label htmlFor="bags-count">Bags Count</Label>
+                    {order.type === 'quick-sale' ? (
+                      <Input
+                        id="bags-count"
+                        type="number"
+                        min="1"
+                        value={order.bagsCount}
+                        onChange={(e) => updateOrder({ bagsCount: parseInt(e.target.value) || 1 })}
+                        className="hgm-input mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
+                        {order.bagsCount}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="balance-id">Balance ID</Label>
+                  {order.type === 'quick-sale' ? (
+                    <Input
+                      id="balance-id"
+                      value={order.balanceId}
+                      onChange={(e) => updateOrder({ balanceId: e.target.value })}
+                      className="hgm-input mt-1"
+                    />
+                  ) : (
                     <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
-                      {order.bagsCount}
+                      {order.balanceId}
                     </div>
-                  </div>
+                  )}
                 </div>
                 
                 <div>
-                  <Label>Balance ID</Label>
-                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
-                    {order.balanceId}
-                  </div>
-                </div>
-                
-                <div>
-                  <Label>Customer Address</Label>
-                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default whitespace-pre-wrap">
-                    {order.customerAddress}
-                  </div>
+                  <Label htmlFor="customer-address">Customer Address</Label>
+                  {order.type === 'quick-sale' ? (
+                    <Textarea
+                      id="customer-address"
+                      value={order.customerAddress}
+                      onChange={(e) => updateOrder({ customerAddress: e.target.value })}
+                      className="hgm-input mt-1"
+                      rows={3}
+                    />
+                  ) : (
+                    <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default whitespace-pre-wrap">
+                      {order.customerAddress}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

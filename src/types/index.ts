@@ -1,8 +1,10 @@
 export type OrderStatus = 'Pending' | 'Completed';
+export type OrderType = 'regular' | 'quick-sale';
 
 export type Order = {
   id: string;
   status: OrderStatus;
+  type: OrderType;
   createdAt: string;
 
   // view-only (manager-set)

@@ -8,6 +8,7 @@ const seedOrders: Order[] = [
   {
     id: 'ORD-001',
     status: 'Pending',
+    type: 'regular',
     createdAt: '2024-01-15T08:30:00Z',
     customerName: 'Green Valley Farms',
     supplierName: 'HGM Grain Co.',
@@ -19,6 +20,7 @@ const seedOrders: Order[] = [
   {
     id: 'ORD-002',
     status: 'Pending',
+    type: 'quick-sale',
     createdAt: '2024-01-15T09:15:00Z',
     customerName: 'Sunrise Agriculture',
     supplierName: 'HGM Grain Co.',
@@ -30,6 +32,7 @@ const seedOrders: Order[] = [
   {
     id: 'ORD-003',
     status: 'Pending',
+    type: 'regular',
     createdAt: '2024-01-15T10:00:00Z',
     customerName: 'Golden Fields Ltd',
     supplierName: 'HGM Grain Co.',
@@ -41,6 +44,7 @@ const seedOrders: Order[] = [
   {
     id: 'ORD-004',
     status: 'Completed',
+    type: 'regular',
     createdAt: '2024-01-14T14:20:00Z',
     customerName: 'Prairie Grain Corp',
     supplierName: 'HGM Grain Co.',

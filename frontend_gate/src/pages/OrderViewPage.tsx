@@ -105,6 +105,34 @@ export default function OrderViewPage() {
   const validateOrder = (orderData: Order): Record<string, string> => {
     const errors: Record<string, string> = {};
     
+    // For quick-sale orders, validate all fields since they're all editable
+    if (orderData.type === 'quick-sale') {
+      if (!orderData.customerName?.trim()) {
+        errors.customerName = 'Customer name is required';
+      }
+      
+      if (!orderData.supplierName?.trim()) {
+        errors.supplierName = 'Supplier name is required';
+      }
+      
+      if (!orderData.productName?.trim()) {
+        errors.productName = 'Product name is required';
+      }
+      
+      if (!orderData.bagsCount || orderData.bagsCount < 1) {
+        errors.bagsCount = 'Bags count must be at least 1';
+      }
+      
+      if (!orderData.balanceId?.trim()) {
+        errors.balanceId = 'Balance ID is required';
+      }
+      
+      if (!orderData.customerAddress?.trim()) {
+        errors.customerAddress = 'Customer address is required';
+      }
+    }
+    
+    // Common validations for all order types
     if (!orderData.driverName?.trim()) {
       errors.driverName = 'Driver name is required';
     }
@@ -279,22 +307,29 @@ export default function OrderViewPage() {
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="max-w-6xl mx-auto p-4 lg:p-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/orders')}
-                className="hgm-input"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">{order.id}</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/orders')}
+              className="hgm-input"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{order.id}</h1>
+              <div className="flex items-center gap-2">
                 <StatusBadge status={order.status} />
+                <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                  order.type === 'quick-sale' 
+                    ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' 
+                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                }`}>
+                  {order.type === 'quick-sale' ? 'Quick Sale' : 'Regular'}
+                </span>
               </div>
             </div>
-            
-            {hasUnsavedChanges && (
+          </div>            {hasUnsavedChanges && (
               <div className="text-sm text-muted-foreground">
                 Unsaved changes
               </div>
@@ -308,19 +343,32 @@ export default function OrderViewPage() {
           {/* Order Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Order Details</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Order Details
+                {order.type === 'quick-sale' && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    All fields editable for Quick Sale
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label htmlFor="customer-name">Customer Name</Label>
                   {order.type === 'quick-sale' ? (
-                    <Input
-                      id="customer-name"
-                      value={order.customerName}
-                      onChange={(e) => updateOrder({ customerName: e.target.value })}
-                      className="hgm-input mt-1"
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        id="customer-name"
+                        value={order.customerName}
+                        onChange={(e) => updateOrder({ customerName: e.target.value })}
+                        className={`hgm-input mt-1 ${validationErrors.customerName ? 'border-destructive' : ''}`}
+                        placeholder="Enter customer name"
+                      />
+                      {validationErrors.customerName && (
+                        <p className="text-sm text-destructive">{validationErrors.customerName}</p>
+                      )}
+                    </div>
                   ) : (
                     <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
                       {order.customerName}
@@ -331,12 +379,18 @@ export default function OrderViewPage() {
                 <div>
                   <Label htmlFor="supplier">Supplier</Label>
                   {order.type === 'quick-sale' ? (
-                    <Input
-                      id="supplier"
-                      value={order.supplierName}
-                      onChange={(e) => updateOrder({ supplierName: e.target.value })}
-                      className="hgm-input mt-1"
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        id="supplier"
+                        value={order.supplierName}
+                        onChange={(e) => updateOrder({ supplierName: e.target.value })}
+                        className={`hgm-input mt-1 ${validationErrors.supplierName ? 'border-destructive' : ''}`}
+                        placeholder="Enter supplier name"
+                      />
+                      {validationErrors.supplierName && (
+                        <p className="text-sm text-destructive">{validationErrors.supplierName}</p>
+                      )}
+                    </div>
                   ) : (
                     <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
                       {order.supplierName}
@@ -348,12 +402,18 @@ export default function OrderViewPage() {
                   <div>
                     <Label htmlFor="product">Product</Label>
                     {order.type === 'quick-sale' ? (
-                      <Input
-                        id="product"
-                        value={order.productName}
-                        onChange={(e) => updateOrder({ productName: e.target.value })}
-                        className="hgm-input mt-1"
-                      />
+                      <div className="space-y-1">
+                        <Input
+                          id="product"
+                          value={order.productName}
+                          onChange={(e) => updateOrder({ productName: e.target.value })}
+                          className={`hgm-input mt-1 ${validationErrors.productName ? 'border-destructive' : ''}`}
+                          placeholder="Enter product name"
+                        />
+                        {validationErrors.productName && (
+                          <p className="text-sm text-destructive">{validationErrors.productName}</p>
+                        )}
+                      </div>
                     ) : (
                       <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
                         {order.productName}
@@ -363,14 +423,20 @@ export default function OrderViewPage() {
                   <div>
                     <Label htmlFor="bags-count">Bags Count</Label>
                     {order.type === 'quick-sale' ? (
-                      <Input
-                        id="bags-count"
-                        type="number"
-                        min="1"
-                        value={order.bagsCount}
-                        onChange={(e) => updateOrder({ bagsCount: parseInt(e.target.value) || 1 })}
-                        className="hgm-input mt-1"
-                      />
+                      <div className="space-y-1">
+                        <Input
+                          id="bags-count"
+                          type="number"
+                          min="1"
+                          value={order.bagsCount}
+                          onChange={(e) => updateOrder({ bagsCount: parseInt(e.target.value) || 1 })}
+                          className={`hgm-input mt-1 ${validationErrors.bagsCount ? 'border-destructive' : ''}`}
+                          placeholder="Enter bags count"
+                        />
+                        {validationErrors.bagsCount && (
+                          <p className="text-sm text-destructive">{validationErrors.bagsCount}</p>
+                        )}
+                      </div>
                     ) : (
                       <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
                         {order.bagsCount}
@@ -382,12 +448,18 @@ export default function OrderViewPage() {
                 <div>
                   <Label htmlFor="balance-id">Balance ID</Label>
                   {order.type === 'quick-sale' ? (
-                    <Input
-                      id="balance-id"
-                      value={order.balanceId}
-                      onChange={(e) => updateOrder({ balanceId: e.target.value })}
-                      className="hgm-input mt-1"
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        id="balance-id"
+                        value={order.balanceId}
+                        onChange={(e) => updateOrder({ balanceId: e.target.value })}
+                        className={`hgm-input mt-1 ${validationErrors.balanceId ? 'border-destructive' : ''}`}
+                        placeholder="Enter balance ID"
+                      />
+                      {validationErrors.balanceId && (
+                        <p className="text-sm text-destructive">{validationErrors.balanceId}</p>
+                      )}
+                    </div>
                   ) : (
                     <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
                       {order.balanceId}
@@ -398,13 +470,19 @@ export default function OrderViewPage() {
                 <div>
                   <Label htmlFor="customer-address">Customer Address</Label>
                   {order.type === 'quick-sale' ? (
-                    <Textarea
-                      id="customer-address"
-                      value={order.customerAddress}
-                      onChange={(e) => updateOrder({ customerAddress: e.target.value })}
-                      className="hgm-input mt-1"
-                      rows={3}
-                    />
+                    <div className="space-y-1">
+                      <Textarea
+                        id="customer-address"
+                        value={order.customerAddress}
+                        onChange={(e) => updateOrder({ customerAddress: e.target.value })}
+                        className={`hgm-input mt-1 ${validationErrors.customerAddress ? 'border-destructive' : ''}`}
+                        rows={3}
+                        placeholder="Enter customer address"
+                      />
+                      {validationErrors.customerAddress && (
+                        <p className="text-sm text-destructive">{validationErrors.customerAddress}</p>
+                      )}
+                    </div>
                   ) : (
                     <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default whitespace-pre-wrap">
                       {order.customerAddress}

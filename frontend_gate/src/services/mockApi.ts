@@ -60,6 +60,38 @@ const seedOrders: Order[] = [
     secondWeightKg: 20000,
     secondWeightTimestamp: '2024-01-14T15:45:00Z',
     netWeightKg: 25000
+  },
+  {
+    id: 'ORD-005',
+    status: 'Pending',
+    type: 'quick-sale',
+    createdAt: '2024-01-15T11:30:00Z',
+    customerName: 'Local Farm Stand',
+    supplierName: 'HGM Grain Co.',
+    bagsCount: 15,
+    productName: 'Organic Oats',
+    balanceId: 'BAL-2024-005',
+    customerAddress: '987 Market Street, Local Town, CA 95005'
+  },
+  {
+    id: 'ORD-006',
+    status: 'Completed',
+    type: 'quick-sale',
+    createdAt: '2024-01-14T16:45:00Z',
+    customerName: 'Emergency Feed Supply',
+    supplierName: 'HGM Grain Co.',
+    bagsCount: 25,
+    productName: 'Feed Corn',
+    balanceId: 'BAL-2024-006',
+    customerAddress: '654 Emergency Ave, Quick City, CA 95006',
+    driverName: 'Sarah Johnson',
+    plateNumber: 'DEF-789012',
+    phoneNumber: '555-0102',
+    firstWeightKg: 12000,
+    firstWeightTimestamp: '2024-01-14T17:00:00Z',
+    secondWeightKg: 5000,
+    secondWeightTimestamp: '2024-01-14T17:30:00Z',
+    netWeightKg: 7000
   }
 ];
 
@@ -114,6 +146,11 @@ export const ordersApi = {
     // Filter by status
     if (filters.status) {
       filtered = filtered.filter(order => order.status === filters.status);
+    }
+
+    // Filter by type
+    if (filters.type) {
+      filtered = filtered.filter(order => order.type === filters.type);
     }
 
     // Search query

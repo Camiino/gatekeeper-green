@@ -39,6 +39,7 @@ export type Driver = {
 
 export type SearchFilters = {
   status?: OrderStatus;
+  type?: OrderType;
   q?: string;
   sort?: string;
   dateFrom?: string;

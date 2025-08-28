@@ -73,7 +73,7 @@ export default function OrdersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Search */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Search</label>
@@ -101,6 +101,24 @@ export default function OrdersPage() {
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Order Type */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Order Type</label>
+                <Select
+                  value={filters.type || 'all'}
+                  onValueChange={(value) => handleFilterChange('type', value === 'all' ? '' : value)}
+                >
+                  <SelectTrigger className="hgm-input">
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="regular">Regular</SelectItem>
+                    <SelectItem value="quick-sale">Quick Sale</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -166,6 +184,7 @@ export default function OrdersPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Order ID</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Bags</TableHead>
@@ -179,6 +198,15 @@ export default function OrdersPage() {
                     {orders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.id}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                            order.type === 'quick-sale' 
+                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' 
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          }`}>
+                            {order.type === 'quick-sale' ? 'Quick Sale' : 'Regular'}
+                          </span>
+                        </TableCell>
                         <TableCell>{order.customerName}</TableCell>
                         <TableCell>{order.productName}</TableCell>
                         <TableCell>{order.bagsCount}</TableCell>

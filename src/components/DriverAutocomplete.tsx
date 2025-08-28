@@ -81,7 +81,7 @@ export default function DriverAutocomplete({
     setTimeout(() => {
       setIsOpen(false);
       onBlur?.();
-    }, 150);
+    }, 200);
   };
 
   return (
@@ -104,13 +104,16 @@ export default function DriverAutocomplete({
         />
         
         {isOpen && suggestions.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-md shadow-md max-h-48 overflow-y-auto">
+          <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-md max-h-48 overflow-y-auto">
             {suggestions.map((driver) => (
               <button
                 key={driver.id}
                 type="button"
                 className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none border-b border-border last:border-b-0"
-                onClick={() => handleSuggestionClick(driver)}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Prevent blur from firing before click
+                  handleSuggestionClick(driver);
+                }}
               >
                 <div className="font-medium">{driver.name}</div>
                 {driver.phone && (

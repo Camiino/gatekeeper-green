@@ -38,16 +38,16 @@ services:
     depends_on:
       - backend
 
-mariadb:
-  build: ./db
-  restart: unless-stopped
-  environment:
-    MARIADB_ROOT_PASSWORD: rootpw
-    MARIADB_DATABASE: hgm
-    MARIADB_USER: hgmuser
-    MARIADB_PASSWORD: hgmpw
-  volumes:
-    - db_data:/var/lib/mysql
+  mariadb:
+    build: ./db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: hgm
+      MARIADB_USER: hgmuser
+      MARIADB_PASSWORD: hgmpw
+    volumes:
+      - db_data:/var/lib/mysql
 
 volumes:
   db_data:

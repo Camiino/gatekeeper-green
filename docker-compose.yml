@@ -20,7 +20,8 @@ services:
     build:
       context: ./frontend_gate
       args:
-        VITE_API_URL: https://hgm.webeesign.com
+        # Use relative /api via nginx proxy to avoid CORS
+        VITE_API_URL: ""
     ports:
       - "3230:80"              # gate frontend
     restart: unless-stopped
@@ -31,7 +32,8 @@ services:
     build:
       context: ./frontend_management
       args:
-        VITE_API_URL: https://hgm.webeesign.com
+        # Use relative /api via nginx proxy to avoid CORS
+        VITE_API_URL: ""
     ports:
       - "3231:80"              # management frontend
     restart: unless-stopped

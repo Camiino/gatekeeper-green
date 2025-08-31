@@ -50,6 +50,23 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
+// ----- UTIL -----
+function toMySQLDateTime(input) {
+  if (input == null || input === "") return null;
+  const d = new Date(input);
+  if (isNaN(d.getTime())) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  // Store in UTC to avoid timezone ambiguity
+  return (
+    d.getUTCFullYear() +
+    "-" + pad(d.getUTCMonth() + 1) +
+    "-" + pad(d.getUTCDate()) +
+    " " + pad(d.getUTCHours()) +
+    ":" + pad(d.getUTCMinutes()) +
+    ":" + pad(d.getUTCSeconds())
+  );
+}
+
 // ----- HEALTH -----
 app.get("/health", async (_req, res) => {
   try {
@@ -237,9 +254,9 @@ app.post("/api/orders", async (req, res) => {
         plate_num,
         product,
         order_type,
-        first_weight_time,
+        toMySQLDateTime(first_weight_time),
         first_weight_kg,
-        second_weight_time,
+        toMySQLDateTime(second_weight_time),
         second_weight_kg,
         net_weight_kg,
         balance_id,
@@ -301,7 +318,11 @@ app.patch("/api/orders/:id", async (req, res) => {
   for (const f of fields) {
     if (f in req.body) {
       setParts.push(`${f}=?`);
-      vals.push(req.body[f]);
+      if (f === "first_weight_time" || f === "second_weight_time") {
+        vals.push(toMySQLDateTime(req.body[f]));
+      } else {
+        vals.push(req.body[f]);
+      }
     }
   }
   if (!setParts.length)

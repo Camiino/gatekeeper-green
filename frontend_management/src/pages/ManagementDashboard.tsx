@@ -118,7 +118,7 @@ export default function ManagementDashboard() {
       </div>
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="w-[95vw] md:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Create Order</DialogTitle>
           </DialogHeader>
@@ -127,7 +127,7 @@ export default function ManagementDashboard() {
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(o) => { if (!o) setEditing(null); }}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="w-[95vw] md:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Order {editing?.id}</DialogTitle>
           </DialogHeader>
@@ -139,4 +139,3 @@ export default function ManagementDashboard() {
     </div>
   );
 }
-

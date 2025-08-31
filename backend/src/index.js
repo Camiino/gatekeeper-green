@@ -67,6 +67,28 @@ function toMySQLDateTime(input) {
   );
 }
 
+// ----- SCHEMA FLAGS -----
+const schema = {
+  hasPaymentTerms: true,
+  hasOrderType: true,
+};
+
+(async () => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='orders' AND COLUMN_NAME IN ('payment_terms','order_type')`,
+      [DB_NAME]
+    );
+    const names = new Set(rows.map((r) => r.COLUMN_NAME));
+    schema.hasPaymentTerms = names.has('payment_terms');
+    schema.hasOrderType = names.has('order_type');
+    if (!schema.hasPaymentTerms) console.warn('orders.payment_terms not found; will omit from writes');
+    if (!schema.hasOrderType) console.warn('orders.order_type not found; will omit from writes');
+  } catch (e) {
+    console.warn('Failed to check schema; proceeding with defaults', e.message);
+  }
+})();
+
 // ----- HEALTH -----
 app.get("/health", async (_req, res) => {
   try {
@@ -147,7 +169,7 @@ app.get("/api/orders", async (req, res) => {
     whereParts.push("o.status=?");
     params.push(status);
   }
-  if (order_type) {
+  if (order_type && schema.hasOrderType) {
     whereParts.push("o.order_type=?");
     params.push(order_type);
   }
@@ -208,73 +230,34 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "order_number required" });
 
   try {
+    const cols = [
+      'order_number','customer_id','supplier_id','driver_id',
+      'num_bags','plate_num','product',
+    ];
+    const vals = [
+      order_number, customer_id, supplier_id, driver_id,
+      num_bags, plate_num, product,
+    ];
+    if (schema.hasOrderType) { cols.push('order_type'); vals.push(order_type); }
+    cols.push('first_weight_time','first_weight_kg','second_weight_time','second_weight_kg','net_weight_kg');
+    vals.push(toMySQLDateTime(first_weight_time), first_weight_kg, toMySQLDateTime(second_weight_time), second_weight_kg, net_weight_kg);
+    cols.push('balance_id','customer_address','fees');
+    vals.push(balance_id, customer_address, fees);
+    cols.push('bill_date','unit','price','quantity','total_price','suggested_selling_price','payment_method');
+    vals.push(bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method);
+    if (schema.hasPaymentTerms) { cols.push('payment_terms'); vals.push(payment_terms); }
+    cols.push('signature','status');
+    vals.push(signature, status);
+
+    const placeholders = cols.map(() => '?').join(',');
+    const updateSet = cols.filter(c => c !== 'order_number').map(c => `${c}=VALUES(${c})`).join(',\n         ');
+
     const [r] = await pool.query(
-      `INSERT INTO orders
-        (order_number, customer_id, supplier_id, driver_id,
-         num_bags, plate_num, product, order_type,
-         first_weight_time, first_weight_kg, second_weight_time, second_weight_kg, net_weight_kg,
-         balance_id, customer_address, fees,
-         bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method, payment_terms, signature,
-         status)
-       VALUES (?,?,?,?,?,
-               ?,?,?,?, ?,?,?,?,
-               ?,?,?,
-               ?,?,?,?, ?,?,?,?,?,?,
-               ?)
+      `INSERT INTO orders (${cols.join(', ')})
+       VALUES (${placeholders})
        ON DUPLICATE KEY UPDATE
-         customer_id=VALUES(customer_id),
-         supplier_id=VALUES(supplier_id),
-         driver_id=VALUES(driver_id),
-         num_bags=VALUES(num_bags),
-         plate_num=VALUES(plate_num),
-         product=VALUES(product),
-         order_type=VALUES(order_type),
-         first_weight_time=VALUES(first_weight_time),
-         first_weight_kg=VALUES(first_weight_kg),
-         second_weight_time=VALUES(second_weight_time),
-         second_weight_kg=VALUES(second_weight_kg),
-         net_weight_kg=VALUES(net_weight_kg),
-         balance_id=VALUES(balance_id),
-         customer_address=VALUES(customer_address),
-         fees=VALUES(fees),
-         bill_date=VALUES(bill_date),
-         unit=VALUES(unit),
-         price=VALUES(price),
-         quantity=VALUES(quantity),
-         total_price=VALUES(total_price),
-         suggested_selling_price=VALUES(suggested_selling_price),
-         payment_method=VALUES(payment_method),
-         payment_terms=VALUES(payment_terms),
-         signature=VALUES(signature),
-         status=VALUES(status)`,
-      [
-        order_number,
-        customer_id,
-        supplier_id,
-        driver_id,
-        num_bags,
-        plate_num,
-        product,
-        order_type,
-        toMySQLDateTime(first_weight_time),
-        first_weight_kg,
-        toMySQLDateTime(second_weight_time),
-        second_weight_kg,
-        net_weight_kg,
-        balance_id,
-        customer_address,
-        fees,
-        bill_date,
-        unit,
-        price,
-        quantity,
-        total_price,
-        suggested_selling_price,
-        payment_method,
-        payment_terms,
-        signature,
-        status,
-      ]
+         ${updateSet}`,
+      vals
     );
 
     const id =
@@ -296,7 +279,7 @@ app.patch("/api/orders/:id", async (req, res) => {
     "num_bags",
     "plate_num",
     "product",
-    "order_type",
+    ...(schema.hasOrderType ? ["order_type"] : []),
     "first_weight_time",
     "first_weight_kg",
     "second_weight_time",
@@ -312,7 +295,7 @@ app.patch("/api/orders/:id", async (req, res) => {
     "total_price",
     "suggested_selling_price",
     "payment_method",
-    "payment_terms",
+    ...(schema.hasPaymentTerms ? ["payment_terms"] : []),
     "signature",
     "status",
   ];

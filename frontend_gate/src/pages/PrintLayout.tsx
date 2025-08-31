@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ordersApi } from '@/services/mockApi';
+import { ordersApi } from '@/services/api';
 import { Order } from '@/types';
 
 export default function PrintLayout() {

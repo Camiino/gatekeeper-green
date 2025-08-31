@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS orders (
   num_bags INT NULL,
   plate_num VARCHAR(40) NULL,
   product ENUM('flour','bran','shawa2ib') NULL,
+  -- Order type
+  order_type ENUM('regular','quick') NOT NULL DEFAULT 'regular',
 
   -- Weighing
   first_weight_time DATETIME NULL,
@@ -103,7 +105,7 @@ ON DUPLICATE KEY UPDATE phone = VALUES(phone);
 INSERT INTO orders (
   order_number,
   customer_id, supplier_id, driver_id,
-  num_bags, plate_num, product,
+  num_bags, plate_num, product, order_type,
   first_weight_time, first_weight_kg,
   second_weight_time, second_weight_kg,
   net_weight_kg,
@@ -115,7 +117,7 @@ INSERT INTO orders (
 SELECT
   'ORD-1001',
   c_customer.id, c_supplier.id, d.id,
-  40, 'B-AB 1234', 'flour',
+  40, 'B-AB 1234', 'flour', 'regular',
   '2025-08-28 10:15:00', 18000,
   '2025-08-28 11:05:00', 12000,
   6000,                               -- net = first - second

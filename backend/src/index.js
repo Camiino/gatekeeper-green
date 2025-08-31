@@ -152,6 +152,7 @@ app.post("/api/orders", async (req, res) => {
     num_bags = null,
     plate_num = null,
     product = null, // 'flour' | 'bran' | 'shawa2ib'
+    order_type = "regular", // 'regular' | 'quick'
 
     first_weight_time = null,
     first_weight_kg = null,
@@ -183,13 +184,13 @@ app.post("/api/orders", async (req, res) => {
     const [r] = await pool.query(
       `INSERT INTO orders
         (order_number, customer_id, supplier_id, driver_id,
-         num_bags, plate_num, product,
+         num_bags, plate_num, product, order_type,
          first_weight_time, first_weight_kg, second_weight_time, second_weight_kg, net_weight_kg,
          balance_id, customer_address, fees,
          bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method, signature,
          status)
        VALUES (?,?,?,?,?,
-               ?,?,?,?, ?,?,?,
+               ?,?,?,?, ?,?,?,?,
                ?,?,?,
                ?,?,?,?, ?,?,?,?,
                ?)
@@ -200,6 +201,7 @@ app.post("/api/orders", async (req, res) => {
          num_bags=VALUES(num_bags),
          plate_num=VALUES(plate_num),
          product=VALUES(product),
+         order_type=VALUES(order_type),
          first_weight_time=VALUES(first_weight_time),
          first_weight_kg=VALUES(first_weight_kg),
          second_weight_time=VALUES(second_weight_time),
@@ -225,6 +227,7 @@ app.post("/api/orders", async (req, res) => {
         num_bags,
         plate_num,
         product,
+        order_type,
         first_weight_time,
         first_weight_kg,
         second_weight_time,
@@ -264,6 +267,7 @@ app.patch("/api/orders/:id", async (req, res) => {
     "num_bags",
     "plate_num",
     "product",
+    "order_type",
     "first_weight_time",
     "first_weight_kg",
     "second_weight_time",

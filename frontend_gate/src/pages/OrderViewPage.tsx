@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import StatusBadge from '@/components/StatusBadge';
 import DriverAutocomplete from '@/components/DriverAutocomplete';
-import { ordersApi, driversApi } from '@/services/mockApi';
+import { ordersApi, driversApi } from '@/services/api';
 import { Order } from '@/types';
 
 export default function OrderViewPage() {

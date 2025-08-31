@@ -7,18 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
-import { ordersApi } from '@/services/mockApi';
+import { ordersApi } from '@/services/api';
 import { Order, SearchFilters } from '@/types';
-
-const FILTERS_KEY = 'hgm_order_filters';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<SearchFilters>(() => {
-    const saved = localStorage.getItem(FILTERS_KEY);
-    return saved ? JSON.parse(saved) : { status: 'Pending' };
-  });
+  const [filters, setFilters] = useState<SearchFilters>({ status: 'Pending' });
 
   const loadOrders = async () => {
     setLoading(true);
@@ -34,7 +29,6 @@ export default function OrdersPage() {
 
   useEffect(() => {
     loadOrders();
-    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
   }, [filters]);
 
   const handleFilterChange = (key: keyof SearchFilters, value: string) => {

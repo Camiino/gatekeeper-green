@@ -15,6 +15,17 @@ function mapOrder(row: any): Order {
     productName: row.product || '',
     balanceId: row.balance_id || '',
     customerAddress: row.customer_address || '',
+    // billing fields
+    unit: row.unit || undefined,
+    pricePerUnit: row.price !== null && row.price !== undefined ? Number(row.price) : undefined,
+    quantity: row.quantity !== null && row.quantity !== undefined ? Number(row.quantity) : undefined,
+    totalPrice: row.total_price !== null && row.total_price !== undefined ? Number(row.total_price) : undefined,
+    suggestedSellingPrice: row.suggested_selling_price !== null && row.suggested_selling_price !== undefined ? Number(row.suggested_selling_price) : undefined,
+    paymentMethod: row.payment_method || undefined,
+    paymentTerms: row.payment_terms || undefined,
+    fees: row.fees !== null && row.fees !== undefined ? Number(row.fees) : undefined,
+    signature: row.signature || undefined,
+    // driver/vehicle/weights
     driverName: row.driver_name || undefined,
     plateNumber: row.plate_num || undefined,
     phoneNumber: row.driver_phone || undefined,
@@ -171,6 +182,16 @@ export const ordersApi = {
     if (patch.secondWeightTimestamp) payload.second_weight_time = patch.secondWeightTimestamp;
     if (patch.balanceId) payload.balance_id = patch.balanceId;
     if (patch.customerAddress) payload.customer_address = patch.customerAddress;
+    // Optional billing fields if present on the object
+    if ((patch as any).unit !== undefined) (payload as any).unit = (patch as any).unit;
+    if ((patch as any).pricePerUnit !== undefined) (payload as any).price = (patch as any).pricePerUnit;
+    if ((patch as any).quantity !== undefined) (payload as any).quantity = (patch as any).quantity;
+    if ((patch as any).totalPrice !== undefined) (payload as any).total_price = (patch as any).totalPrice;
+    if ((patch as any).suggestedSellingPrice !== undefined) (payload as any).suggested_selling_price = (patch as any).suggestedSellingPrice;
+    if ((patch as any).paymentMethod !== undefined) (payload as any).payment_method = (patch as any).paymentMethod;
+    if ((patch as any).paymentTerms !== undefined) (payload as any).payment_terms = (patch as any).paymentTerms;
+    if ((patch as any).fees !== undefined) (payload as any).fees = (patch as any).fees;
+    if ((patch as any).signature !== undefined) (payload as any).signature = (patch as any).signature;
     if (patch.status) payload.status = patch.status.toLowerCase();
 
     if (payload.first_weight_kg != null && payload.second_weight_kg != null) {

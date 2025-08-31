@@ -27,6 +27,17 @@ export type Order = {
 
   // computed
   netWeightKg?: number;
+
+  // billing (manager/admin)
+  unit?: string;
+  pricePerUnit?: number;
+  quantity?: number;
+  totalPrice?: number;
+  suggestedSellingPrice?: number;
+  paymentMethod?: 'cash' | 'card' | 'transfer' | 'other';
+  paymentTerms?: 'now' | 'installments' | 'later';
+  signature?: string;
+  fees?: number;
 };
 
 export type Driver = {

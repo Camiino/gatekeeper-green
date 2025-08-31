@@ -222,6 +222,8 @@ export const ordersApi = {
     if (patch.suggestedSellingPrice !== undefined) payload.suggested_selling_price = patch.suggestedSellingPrice;
     if (patch.paymentMethod !== undefined) payload.payment_method = patch.paymentMethod;
     if (patch.paymentTerms !== undefined) payload.payment_terms = patch.paymentTerms;
+    if (patch.fees !== undefined) payload.fees = patch.fees;
+    if (patch.signature !== undefined) payload.signature = patch.signature;
     if (patch.status) payload.status = patch.status.toLowerCase();
 
     if (payload.first_weight_kg != null && payload.second_weight_kg != null) {

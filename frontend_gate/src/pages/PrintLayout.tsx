@@ -94,7 +94,7 @@ export default function PrintLayout() {
                 <div className="mb-3">{order.plateNumber || 'placeholder'}</div>
                 
                 <div className="font-semibold">Phone Number:</div>
-                <div className="mb-3">{order.phoneNumber || 'placeholder'}</div>
+                <div className="mb-3">{order.phoneNumber || '-'}</div>
                 
                 <div className="font-semibold">Supplier:</div>
                 <div>{order.supplierName}</div>
@@ -107,19 +107,19 @@ export default function PrintLayout() {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="text-center">
                   <div className="font-semibold text-sm">First Weight</div>
-                  <div className="text-xl font-bold">{order.firstWeightKg ? `${order.firstWeightKg.toLocaleString()} kg` : 'placeholder'}</div>
+                  <div className="text-xl font-bold">{order.firstWeightKg != null ? `${order.firstWeightKg.toLocaleString()} kg` : '-'}</div>
                   <div className="text-xs text-muted-foreground">{formatDateShort(order.firstWeightTimestamp)}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-semibold text-sm">Second Weight</div>
-                  <div className="text-xl font-bold">{order.secondWeightKg ? `${order.secondWeightKg.toLocaleString()} kg` : 'placeholder'}</div>
+                  <div className="text-xl font-bold">{order.secondWeightKg != null ? `${order.secondWeightKg.toLocaleString()} kg` : '-'}</div>
                   <div className="text-xs text-muted-foreground">{formatDateShort(order.secondWeightTimestamp)}</div>
                 </div>
               </div>
               <div className="border-t-2 border-primary pt-3 text-center">
                 <div className="font-semibold text-sm">NET WEIGHT</div>
                 <div className="text-3xl font-bold text-primary">
-                  {order.netWeightKg ? `${order.netWeightKg.toLocaleString()} kg` : 'placeholder'}
+                  {order.netWeightKg != null ? `${order.netWeightKg.toLocaleString()} kg` : '-'}
                 </div>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function PrintLayout() {
             {/* Fees */}
             <div className="border rounded-lg p-4">
               <div className="font-semibold mb-2">Fees:</div>
-              <div className="text-lg font-bold">placeholder</div>
+              <div className="text-lg font-bold">{order.fees != null ? order.fees.toFixed(2) : '-'}</div>
             </div>
           </div>
         );
@@ -218,9 +218,9 @@ export default function PrintLayout() {
                 <tbody>
                   <tr className="border-b">
                     <td className="p-3">{order.productName}</td>
-                    <td className="text-center p-3">kg</td>
-                    <td className="text-right p-3">{order.netWeightKg ? `${order.netWeightKg.toLocaleString()}` : 'placeholder'}</td>
-                    <td className="text-right p-3">placeholder</td>
+                    <td className="text-center p-3">{order.unit || 'kg'}</td>
+                    <td className="text-right p-3">{(order.quantity ?? order.netWeightKg)?.toLocaleString() || '-'}</td>
+                    <td className="text-right p-3">{order.pricePerUnit != null ? order.pricePerUnit.toFixed(2) : '-'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -230,15 +230,19 @@ export default function PrintLayout() {
             <div className="space-y-3 bg-accent p-4 rounded-lg">
               <div className="flex justify-between">
                 <span className="font-semibold">Total Price:</span>
-                <span className="font-bold">placeholder</span>
+                <span className="font-bold">{order.totalPrice != null
+                  ? order.totalPrice.toFixed(2)
+                  : (order.pricePerUnit != null && (order.quantity ?? order.netWeightKg) != null)
+                    ? (order.pricePerUnit * (order.quantity ?? order.netWeightKg)!).toFixed(2)
+                    : '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Suggested Price:</span>
-                <span>placeholder</span>
+                <span>{order.suggestedSellingPrice != null ? order.suggestedSellingPrice.toFixed(2) : '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Payment Method:</span>
-                <span>placeholder</span>
+                <span>{order.paymentMethod || '-'}</span>
               </div>
             </div>
 

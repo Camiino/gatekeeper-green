@@ -123,9 +123,18 @@ const baseOrderSelect = `
 `;
 
 app.get("/api/orders", async (req, res) => {
-  const { status } = req.query;
-  const where = status ? "WHERE o.status=?" : "";
-  const params = status ? [status] : [];
+  const { status, order_type } = req.query;
+  const whereParts = [];
+  const params = [];
+  if (status) {
+    whereParts.push("o.status=?");
+    params.push(status);
+  }
+  if (order_type) {
+    whereParts.push("o.order_type=?");
+    params.push(order_type);
+  }
+  const where = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
   const [rows] = await pool.query(
     `${baseOrderSelect} ${where} ORDER BY o.created_at DESC LIMIT 200`,
     params

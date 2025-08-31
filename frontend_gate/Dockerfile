@@ -9,6 +9,10 @@ RUN apk add --no-cache \
 # Set working directory
 WORKDIR /app
 
+# Accept and expose API base URL for Vite build
+ARG VITE_API_URL=
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Copy Vite project files
 COPY . .
 

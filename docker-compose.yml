@@ -12,7 +12,7 @@ services:
       DB_PASS: hgmpw
       DB_NAME: hgm
       PORT: 4000
-      CORS_ORIGINS: https://hgm-gate.webeesign.com,https://hgm-management.webeesign.com,http://localhost:3000,http://localhost:3001
+      CORS_ORIGINS: https://hgm-gate.webeesign.com,https://hgm-management.webeesign.com,http://localhost:3000,http://localhost:3001,http://localhost:3230,http://localhost:3231
     depends_on:
       - mariadb
 
@@ -22,7 +22,7 @@ services:
       args:
         VITE_API_URL: https://hgm.webeesign.com
     ports:
-      - "3230:3000"            # gate frontend
+      - "3230:80"              # gate frontend
     restart: unless-stopped
     depends_on:
       - backend
@@ -33,7 +33,7 @@ services:
       args:
         VITE_API_URL: https://hgm.webeesign.com
     ports:
-      - "3231:3000"            # management frontend
+      - "3231:80"              # management frontend
     restart: unless-stopped
     depends_on:
       - backend

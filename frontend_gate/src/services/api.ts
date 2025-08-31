@@ -6,7 +6,7 @@ function mapOrder(row: any): Order {
   return {
     id: String(row.id),
     status: row.status && row.status.toLowerCase() === 'completed' ? 'Completed' : 'Pending',
-    type: 'regular',
+    type: row.order_type === 'quick' ? 'quick-sale' : 'regular',
     createdAt: row.created_at,
     customerName: row.customer_name || '',
     supplierName: row.supplier_name || '',
@@ -89,6 +89,11 @@ export const ordersApi = {
   async listOrders(filters: SearchFilters = {}): Promise<Order[]> {
     const params = new URLSearchParams();
     if (filters.status) params.set('status', filters.status.toLowerCase());
+    // Optional: backend filter by order_type when provided
+    if (filters.type && filters.type !== 'regular') {
+      // map UI 'quick-sale' -> backend 'quick'
+      params.set('order_type', filters.type === 'quick-sale' ? 'quick' : 'regular');
+    }
     const data = await fetchJSON(`${API_BASE}/api/orders?${params.toString()}`);
     let orders: Order[] = data.map(mapOrder);
 

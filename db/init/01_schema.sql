@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_price DECIMAL(10,2) NULL,          -- optionally compute app-side: price*quantity
   suggested_selling_price DECIMAL(10,2) NULL,
   payment_method ENUM('cash','card','transfer','other') NULL,
+  payment_terms ENUM('now','installments','later') NULL,
   signature VARCHAR(160) NULL,             -- signer name or path to signature image
 
   -- Meta
@@ -111,7 +112,7 @@ INSERT INTO orders (
   net_weight_kg,
   balance_id,
   customer_address, fees,
-  bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method, signature,
+  bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method, payment_terms, signature,
   status
 )
 SELECT
@@ -123,7 +124,7 @@ SELECT
   6000,                               -- net = first - second
   'BAL-7788',
   'Musterstraße 12, Berlin', 150.00,
-  '2025-08-28', 'kg', 0.45, 6000, 2700.00, 0.55, 'transfer', 'Gatekeeper Jane',
+  '2025-08-28', 'kg', 0.45, 6000, 2700.00, 0.55, 'transfer', 'now', 'Gatekeeper Jane',
   'pending'
 FROM companies c_customer, companies c_supplier, drivers d
 WHERE c_customer.name = 'Acme Logistics'
@@ -151,5 +152,6 @@ ON DUPLICATE KEY UPDATE
   total_price = VALUES(total_price),
   suggested_selling_price = VALUES(suggested_selling_price),
   payment_method = VALUES(payment_method),
+  payment_terms = VALUES(payment_terms),
   signature = VALUES(signature),
   status = VALUES(status);

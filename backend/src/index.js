@@ -198,6 +198,7 @@ app.post("/api/orders", async (req, res) => {
     total_price = null,
     suggested_selling_price = null,
     payment_method = null, // 'cash' | 'card' | 'transfer' | 'other'
+    payment_terms = null, // 'now' | 'installments' | 'later'
     signature = null,
 
     status = "pending",
@@ -213,12 +214,12 @@ app.post("/api/orders", async (req, res) => {
          num_bags, plate_num, product, order_type,
          first_weight_time, first_weight_kg, second_weight_time, second_weight_kg, net_weight_kg,
          balance_id, customer_address, fees,
-         bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method, signature,
+         bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method, payment_terms, signature,
          status)
        VALUES (?,?,?,?,?,
                ?,?,?,?, ?,?,?,?,
                ?,?,?,
-               ?,?,?,?, ?,?,?,?,
+               ?,?,?,?, ?,?,?,?,?,?,
                ?)
        ON DUPLICATE KEY UPDATE
          customer_id=VALUES(customer_id),
@@ -243,6 +244,7 @@ app.post("/api/orders", async (req, res) => {
          total_price=VALUES(total_price),
          suggested_selling_price=VALUES(suggested_selling_price),
          payment_method=VALUES(payment_method),
+         payment_terms=VALUES(payment_terms),
          signature=VALUES(signature),
          status=VALUES(status)`,
       [
@@ -269,6 +271,7 @@ app.post("/api/orders", async (req, res) => {
         total_price,
         suggested_selling_price,
         payment_method,
+        payment_terms,
         signature,
         status,
       ]
@@ -309,6 +312,7 @@ app.patch("/api/orders/:id", async (req, res) => {
     "total_price",
     "suggested_selling_price",
     "payment_method",
+    "payment_terms",
     "signature",
     "status",
   ];

@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 
 type Props = {
   value?: string;
-  onChange: (v: string) => void;
+  onChange: (name: string, address?: string) => void;
   onBlur?: () => void;
   error?: string;
   placeholder?: string;
@@ -54,7 +54,7 @@ export default function CompanyAutocomplete({ value = '', onChange, onBlur, erro
   };
 
   const handleSuggestionClick = (c: { id: string; name: string; address?: string }) => {
-    onChange(c.name);
+    onChange(c.name, c.address);
     setIsOpen(false);
     inputRef.current?.blur();
   };
@@ -113,4 +113,3 @@ export default function CompanyAutocomplete({ value = '', onChange, onBlur, erro
     </div>
   );
 }
-

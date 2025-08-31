@@ -67,6 +67,17 @@ function toMySQLDateTime(input) {
   );
 }
 
+async function nextCode(prefix, pad, column) {
+  const start = prefix.length + 2; // e.g., 'ORD-' -> start at 5
+  const [rows] = await pool.query(
+    `SELECT COALESCE(MAX(CAST(SUBSTRING(${column}, ?) AS UNSIGNED)), 0) AS maxn
+       FROM orders WHERE ${column} LIKE ?`,
+    [start, `${prefix}-%`]
+  );
+  const next = Number(rows[0]?.maxn || 0) + 1;
+  return `${prefix}-${String(next).padStart(pad, "0")}`;
+}
+
 // ----- SCHEMA FLAGS -----
 const schema = {
   hasPaymentTerms: true,
@@ -226,23 +237,24 @@ app.post("/api/orders", async (req, res) => {
     status = "pending",
   } = req.body;
 
-  if (!order_number)
-    return res.status(400).json({ error: "order_number required" });
-
   try {
+    // Compute sequential numbers if not provided
+    const ordNum = order_number || (await nextCode("ORD", 4, "order_number"));
+    const balId = balance_id || (await nextCode("BAL", 4, "balance_id"));
+
     const cols = [
       'order_number','customer_id','supplier_id','driver_id',
       'num_bags','plate_num','product',
     ];
     const vals = [
-      order_number, customer_id, supplier_id, driver_id,
+      ordNum, customer_id, supplier_id, driver_id,
       num_bags, plate_num, product,
     ];
     if (schema.hasOrderType) { cols.push('order_type'); vals.push(order_type); }
     cols.push('first_weight_time','first_weight_kg','second_weight_time','second_weight_kg','net_weight_kg');
     vals.push(toMySQLDateTime(first_weight_time), first_weight_kg, toMySQLDateTime(second_weight_time), second_weight_kg, net_weight_kg);
     cols.push('balance_id','customer_address','fees');
-    vals.push(balance_id, customer_address, fees);
+    vals.push(balId, customer_address, fees);
     cols.push('bill_date','unit','price','quantity','total_price','suggested_selling_price','payment_method');
     vals.push(bill_date, unit, price, quantity, total_price, suggested_selling_price, payment_method);
     if (schema.hasPaymentTerms) { cols.push('payment_terms'); vals.push(payment_terms); }
@@ -263,9 +275,9 @@ app.post("/api/orders", async (req, res) => {
     const id =
       r.insertId ||
       (await pool.query("SELECT id FROM orders WHERE order_number=?", [
-        order_number,
+        ordNum,
       ]))[0][0].id;
-    res.status(201).json({ id, order_number });
+    res.status(201).json({ id, order_number: ordNum, balance_id: balId });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

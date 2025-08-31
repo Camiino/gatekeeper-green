@@ -376,7 +376,14 @@ export default function OrderViewPage() {
                   <Label htmlFor="customer-name">Customer Name</Label>
                   {editMode ? (
                     <div className="space-y-1">
-                      <CompanyAutocomplete value={order.customerName} onChange={(v) => updateOrder({ customerName: v })} />
+                      <CompanyAutocomplete
+                        value={order.customerName}
+                        onChange={(name, address) => {
+                          const updates: Partial<Order> = { customerName: name } as any;
+                          if (address !== undefined) (updates as any).customerAddress = address;
+                          updateOrder(updates);
+                        }}
+                      />
                       {validationErrors.customerName && (
                         <p className="text-sm text-destructive">{validationErrors.customerName}</p>
                       )}
@@ -392,7 +399,10 @@ export default function OrderViewPage() {
                   <Label htmlFor="supplier">Supplier</Label>
                   {editMode ? (
                     <div className="space-y-1">
-                      <CompanyAutocomplete value={order.supplierName} onChange={(v) => updateOrder({ supplierName: v })} />
+                      <CompanyAutocomplete
+                        value={order.supplierName}
+                        onChange={(name) => updateOrder({ supplierName: name })}
+                      />
                       {validationErrors.supplierName && (
                         <p className="text-sm text-destructive">{validationErrors.supplierName}</p>
                       )}

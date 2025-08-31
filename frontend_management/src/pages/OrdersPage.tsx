@@ -249,7 +249,7 @@ export default function OrdersPage() {
         </Card>
       </div>
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="w-[95vw] md:max-w-3xl">
+        <DialogContent className="w-[95vw] md:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Order</DialogTitle>
           </DialogHeader>
@@ -266,7 +266,11 @@ export default function OrdersPage() {
             </div>
             <div>
               <Label>Customer Name</Label>
-              <CompanyAutocomplete value={form.customerName} onChange={(v) => setForm({ ...form, customerName: v })} placeholder="Select or type customer" />
+              <CompanyAutocomplete
+                value={form.customerName}
+                onChange={(name, address) => setForm({ ...form, customerName: name, customerAddress: address ?? form.customerAddress })}
+                placeholder="Select or type customer"
+              />
             </div>
             <div>
               <Label>Supplier</Label>
@@ -287,10 +291,7 @@ export default function OrdersPage() {
                 </UiSelectContent>
               </UiSelect>
             </div>
-            <div>
-              <Label>Balance ID</Label>
-              <Input placeholder="Auto if empty" value={form.balanceId || ''} onChange={(e) => setForm({ ...form, balanceId: e.target.value })} />
-            </div>
+            {/* Balance ID is auto-generated on the backend */}
             <div>
               <Label>Price/kg</Label>
               <Input type="number" step="0.01" value={form.pricePerUnit ?? ''} onChange={(e) => setForm({ ...form, pricePerUnit: e.target.value ? Number(e.target.value) : undefined })} />

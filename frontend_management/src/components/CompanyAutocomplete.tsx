@@ -10,7 +10,6 @@ type Props = {
   value?: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  label?: string;
 };
 
 export default function CompanyAutocomplete({ value, onChange, placeholder }: Props) {
@@ -44,25 +43,13 @@ export default function CompanyAutocomplete({ value, onChange, placeholder }: Pr
           <CommandEmpty>No company found.</CommandEmpty>
           <CommandGroup>
             {filtered.map((c) => (
-              <CommandItem
-                key={c.id}
-                onSelect={() => {
-                  onChange(c.name);
-                  setOpen(false);
-                }}
-              >
+              <CommandItem key={c.id} onSelect={() => { onChange(c.name); setOpen(false); }}>
                 <Check className={cn('mr-2 h-4 w-4', display === c.name ? 'opacity-100' : 'opacity-0')} />
                 {c.name}
               </CommandItem>
             ))}
             {query && (
-              <CommandItem
-                key={`new-${query}`}
-                onSelect={() => {
-                  onChange(query);
-                  setOpen(false);
-                }}
-              >
+              <CommandItem key={`new-${query}`} onSelect={() => { onChange(query); setOpen(false); }}>
                 Use "{query}" (new)
               </CommandItem>
             )}

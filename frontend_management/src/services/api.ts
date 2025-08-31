@@ -218,19 +218,29 @@ export type NewOrderInput = {
   fees?: number;
 };
 
-export const managementApi = {
-  async listCompanies(): Promise<{ id: number; name: string; address: string | null }[]> {
-    const data = await fetchJSON(`${API_BASE}/api/companies`);
-    return Array.isArray(data) ? data : [];
-  },
+async function listCompanies(): Promise<{ id: number; name: string; address: string | null }[]> {
+  const data = await fetchJSON(`${API_BASE}/api/companies`);
+  return Array.isArray(data) ? data : [];
+}
 
-  async listOrders(filters: SearchFilters = {}) {
-    return ordersApi.listOrders(filters);
-  },
+export const managementApi = {
+  listCompanies,
 
   async createOrder(input: NewOrderInput): Promise<{ id: number; order_number: string }> {
-    const customer_id = input.customerName ? await findOrCreateCompany(input.customerName, input.customerAddress) : null;
-    const supplier_id = input.supplierName ? await findOrCreateCompany(input.supplierName) : null;
+    const findOrCreate = async (name?: string, address?: string) => {
+      if (!name) return null;
+      const companies = await listCompanies();
+      const found = companies.find(c => c.name.toLowerCase() === name.toLowerCase());
+      if (found) return found.id;
+      const data = await fetchJSON(`${API_BASE}/api/companies`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, address })
+      });
+      return data.id;
+    };
+
+    const customer_id = await findOrCreate(input.customerName, input.customerAddress);
+    const supplier_id = await findOrCreate(input.supplierName);
 
     const order_number = `ORD-${Date.now()}`;
     const balance_id = input.balanceId || `BAL-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -259,21 +269,15 @@ export const managementApi = {
     };
 
     const data = await fetchJSON(`${API_BASE}/api/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
     return data;
   },
 
   async updateOrder(id: string, input: Partial<NewOrderInput>): Promise<void> {
     const payload: any = {};
-    if (input.customerName !== undefined) {
-      payload.customer_id = input.customerName ? await findOrCreateCompany(input.customerName, input.customerAddress) : null;
-    }
-    if (input.supplierName !== undefined) {
-      payload.supplier_id = input.supplierName ? await findOrCreateCompany(input.supplierName) : null;
-    }
+    if (input.customerName !== undefined) payload.customer_id = await findOrCreateCompany(input.customerName!, input.customerAddress);
+    if (input.supplierName !== undefined) payload.supplier_id = await findOrCreateCompany(input.supplierName!);
     if (input.numBags !== undefined) payload.num_bags = input.numBags;
     if (input.product !== undefined) payload.product = input.product;
     if (input.balanceId !== undefined) payload.balance_id = input.balanceId;
@@ -287,11 +291,7 @@ export const managementApi = {
     if (input.customerAddress !== undefined) payload.customer_address = input.customerAddress;
     if (input.fees !== undefined) payload.fees = input.fees;
 
-    await fetchJSON(`${API_BASE}/api/orders/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    await fetchJSON(`${API_BASE}/api/orders/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   },
 
   async deleteOrder(id: string): Promise<void> {

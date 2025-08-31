@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, CheckCircle, Printer, Clock } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle, Printer, Clock, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import StatusBadge from '@/components/StatusBadge';
 import DriverAutocomplete from '@/components/DriverAutocomplete';
-import { ordersApi, driversApi } from '@/services/api';
+import { ordersApi, driversApi, managementApi } from '@/services/api';
 import { Order } from '@/types';
+import CompanyAutocomplete from '@/components/CompanyAutocomplete';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function OrderViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +26,7 @@ export default function OrderViewPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -329,7 +332,22 @@ export default function OrderViewPage() {
                 </span>
               </div>
             </div>
-          </div>            {hasUnsavedChanges && (
+          </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setEditMode((v) => !v)} className="hgm-input">
+                <Pencil className="h-4 w-4 mr-2" />
+                {editMode ? 'View' : 'Edit'}
+              </Button>
+              <Button variant="destructive" onClick={async () => {
+                if (!id) return;
+                if (!confirm(`Delete order ${id}?`)) return;
+                try { await managementApi.deleteOrder(id); navigate('/orders'); } catch (e) { /* handled upstream */ }
+              }} className="hgm-input">
+                <Trash className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+            {hasUnsavedChanges && (
               <div className="text-sm text-muted-foreground">
                 Unsaved changes
               </div>
@@ -356,15 +374,9 @@ export default function OrderViewPage() {
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label htmlFor="customer-name">Customer Name</Label>
-                  {order.type === 'quick-sale' ? (
+                  {editMode ? (
                     <div className="space-y-1">
-                      <Input
-                        id="customer-name"
-                        value={order.customerName}
-                        onChange={(e) => updateOrder({ customerName: e.target.value })}
-                        className={`hgm-input mt-1 ${validationErrors.customerName ? 'border-destructive' : ''}`}
-                        placeholder="Enter customer name"
-                      />
+                      <CompanyAutocomplete value={order.customerName} onChange={(v) => updateOrder({ customerName: v })} />
                       {validationErrors.customerName && (
                         <p className="text-sm text-destructive">{validationErrors.customerName}</p>
                       )}
@@ -378,15 +390,9 @@ export default function OrderViewPage() {
                 
                 <div>
                   <Label htmlFor="supplier">Supplier</Label>
-                  {order.type === 'quick-sale' ? (
+                  {editMode ? (
                     <div className="space-y-1">
-                      <Input
-                        id="supplier"
-                        value={order.supplierName}
-                        onChange={(e) => updateOrder({ supplierName: e.target.value })}
-                        className={`hgm-input mt-1 ${validationErrors.supplierName ? 'border-destructive' : ''}`}
-                        placeholder="Enter supplier name"
-                      />
+                      <CompanyAutocomplete value={order.supplierName} onChange={(v) => updateOrder({ supplierName: v })} />
                       {validationErrors.supplierName && (
                         <p className="text-sm text-destructive">{validationErrors.supplierName}</p>
                       )}
@@ -401,12 +407,12 @@ export default function OrderViewPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="product">Product</Label>
-                    {order.type === 'quick-sale' ? (
-                      <div className="space-y-1">
-                        <Input
-                          id="product"
-                          value={order.productName}
-                          onChange={(e) => updateOrder({ productName: e.target.value })}
+                  {editMode ? (
+                    <div className="space-y-1">
+                      <Input
+                        id="product"
+                        value={order.productName}
+                        onChange={(e) => updateOrder({ productName: e.target.value })}
                           className={`hgm-input mt-1 ${validationErrors.productName ? 'border-destructive' : ''}`}
                           placeholder="Enter product name"
                         />
@@ -422,12 +428,12 @@ export default function OrderViewPage() {
                   </div>
                   <div>
                     <Label htmlFor="bags-count">Bags Count</Label>
-                    {order.type === 'quick-sale' ? (
-                      <div className="space-y-1">
-                        <Input
-                          id="bags-count"
-                          type="number"
-                          min="1"
+                  {editMode ? (
+                    <div className="space-y-1">
+                      <Input
+                        id="bags-count"
+                        type="number"
+                        min="1"
                           value={order.bagsCount}
                           onChange={(e) => updateOrder({ bagsCount: parseInt(e.target.value) || 1 })}
                           className={`hgm-input mt-1 ${validationErrors.bagsCount ? 'border-destructive' : ''}`}
@@ -447,7 +453,7 @@ export default function OrderViewPage() {
                 
                 <div>
                   <Label htmlFor="balance-id">Balance ID</Label>
-                  {order.type === 'quick-sale' ? (
+                  {editMode ? (
                     <div className="space-y-1">
                       <Input
                         id="balance-id"
@@ -469,7 +475,7 @@ export default function OrderViewPage() {
                 
                 <div>
                   <Label htmlFor="customer-address">Customer Address</Label>
-                  {order.type === 'quick-sale' ? (
+                  {editMode ? (
                     <div className="space-y-1">
                       <Textarea
                         id="customer-address"
@@ -493,6 +499,107 @@ export default function OrderViewPage() {
             </CardContent>
           </Card>
 
+          {/* Billing */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Billing</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-4">
+              <div>
+                <Label>Unit</Label>
+                {editMode ? (
+                  <Select value={order.unit || 'kg'} onValueChange={(v) => updateOrder({ unit: v })}>
+                    <SelectTrigger className="hgm-input"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="bag">bag</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.unit || '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Price per unit</Label>
+                {editMode ? (
+                  <Input type="number" step="0.01" value={order.pricePerUnit ?? ''} onChange={(e) => updateOrder({ pricePerUnit: e.target.value ? Number(e.target.value) : undefined })} />
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.pricePerUnit ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Quantity</Label>
+                {editMode ? (
+                  <Input type="number" step="0.01" value={order.quantity ?? ''} onChange={(e) => updateOrder({ quantity: e.target.value ? Number(e.target.value) : undefined })} />
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.quantity ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Total Price</Label>
+                {editMode ? (
+                  <Input type="number" step="0.01" value={order.totalPrice ?? ''} onChange={(e) => updateOrder({ totalPrice: e.target.value ? Number(e.target.value) : undefined })} />
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.totalPrice ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Suggested Selling Price</Label>
+                {editMode ? (
+                  <Input type="number" step="0.01" value={order.suggestedSellingPrice ?? ''} onChange={(e) => updateOrder({ suggestedSellingPrice: e.target.value ? Number(e.target.value) : undefined })} />
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.suggestedSellingPrice ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Payment Method</Label>
+                {editMode ? (
+                  <Select value={order.paymentMethod || 'cash'} onValueChange={(v) => updateOrder({ paymentMethod: v as any })}>
+                    <SelectTrigger className="hgm-input"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="transfer">Transfer</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.paymentMethod ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Payment Terms</Label>
+                {editMode ? (
+                  <Select value={order.paymentTerms || 'now'} onValueChange={(v) => updateOrder({ paymentTerms: v as any })}>
+                    <SelectTrigger className="hgm-input"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="now">Now</SelectItem>
+                      <SelectItem value="installments">Installments</SelectItem>
+                      <SelectItem value="later">Later</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.paymentTerms ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Fees</Label>
+                {editMode ? (
+                  <Input type="number" step="0.01" value={order.fees ?? ''} onChange={(e) => updateOrder({ fees: e.target.value ? Number(e.target.value) : undefined })} />
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.fees ?? '-'}</div>
+                )}
+              </div>
+              <div>
+                <Label>Signature</Label>
+                {editMode ? (
+                  <Input value={order.signature || ''} onChange={(e) => updateOrder({ signature: e.target.value })} />
+                ) : (
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">{order.signature ?? '-'}</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
           {/* Driver & Weights (Editable) */}
           <Card>
             <CardHeader>

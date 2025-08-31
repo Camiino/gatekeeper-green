@@ -21,6 +21,8 @@ export type Order = {
   suggestedSellingPrice?: number;
   paymentMethod?: 'cash' | 'card' | 'transfer' | 'other';
   paymentTerms?: 'now' | 'installments' | 'later';
+  signature?: string;
+  fees?: number;
 
   // editable (gate)
   driverName?: string;

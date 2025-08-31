@@ -231,7 +231,7 @@ export default function OrdersPage() {
                         </TableCell>
                         <TableCell>
                           <Button asChild variant="outline" size="sm">
-                            <Link to={`/orders/${order.id}`}>
+                            <Link to={`/orders/${order.orderNumber || ('ORD-' + order.id)}`}>
                               <Eye className="h-4 w-4 mr-2" />
                               View
                             </Link>

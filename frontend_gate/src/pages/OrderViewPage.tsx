@@ -259,7 +259,7 @@ export default function OrderViewPage() {
     { id: 'balance-card', name: 'Balance Card', description: 'Weight and balance information' },
     { id: 'shipping-card', name: 'Shipping Card', description: 'Shipping and delivery details' },
     { id: 'bill', name: 'Bill', description: 'Invoice and billing information' }
-  ];
+  ].filter((opt) => !(opt.id === 'bill' && order?.customerName === 'HGM'));
 
   const handlePrintOption = (type: string) => {
     setShowPrintDialog(false);

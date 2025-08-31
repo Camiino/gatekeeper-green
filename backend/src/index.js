@@ -193,9 +193,13 @@ app.get("/api/orders", async (req, res) => {
 });
 
 app.get("/api/orders/:id", async (req, res) => {
-  const [rows] = await pool.query(`${baseOrderSelect} WHERE o.id=?`, [
-    req.params.id,
-  ]);
+  const key = req.params.id;
+  let rows;
+  if (/^\d+$/.test(key)) {
+    [rows] = await pool.query(baseOrderSelect + " WHERE o.id=?", [key]);
+  } else {
+    [rows] = await pool.query(baseOrderSelect + " WHERE o.order_number=?", [key]);
+  }
   if (!rows.length) return res.status(404).json({ error: "not found" });
   res.json(rows[0]);
 });

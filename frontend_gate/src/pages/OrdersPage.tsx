@@ -177,7 +177,7 @@ export default function OrdersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Order ID</TableHead>
+                      <TableHead>Order</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Product</TableHead>
@@ -191,7 +191,7 @@ export default function OrdersPage() {
                   <TableBody>
                     {orders.map((order) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id}</TableCell>
+                        <TableCell className="font-medium">{order.orderNumber || `ORD-${order.id}`}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                             order.type === 'quick-sale' 

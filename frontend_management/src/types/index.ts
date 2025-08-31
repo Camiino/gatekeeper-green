@@ -3,6 +3,7 @@ export type OrderType = 'regular' | 'quick-sale';
 
 export type Order = {
   id: string;
+  orderNumber?: string;
   status: OrderStatus;
   type: OrderType;
   createdAt: string;

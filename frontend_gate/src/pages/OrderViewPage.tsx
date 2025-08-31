@@ -317,7 +317,7 @@ export default function OrderViewPage() {
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">{order.id}</h1>
+              <h1 className="text-2xl font-bold">{order.orderNumber || `ORD-${order.id}`}</h1>
               <div className="flex items-center gap-2">
                 <StatusBadge status={order.status} />
                 <span className={`px-2 py-1 text-xs rounded-full font-medium ${

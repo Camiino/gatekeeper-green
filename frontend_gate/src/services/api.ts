@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 function mapOrder(row: any): Order {
   return {
     id: String(row.id),
+    orderNumber: row.order_number || (row.id != null ? `ORD-${row.id}` : undefined),
     status: row.status && row.status.toLowerCase() === 'completed' ? 'Completed' : 'Pending',
     type: row.order_type === 'quick' ? 'quick-sale' : 'regular',
     createdAt: row.created_at,
@@ -101,6 +102,7 @@ export const ordersApi = {
       const q = filters.q.toLowerCase();
       orders = orders.filter(o =>
         o.id.toLowerCase().includes(q) ||
+        (o.orderNumber || '').toLowerCase().includes(q) ||
         o.customerName.toLowerCase().includes(q) ||
         o.productName.toLowerCase().includes(q) ||
         o.driverName?.toLowerCase().includes(q) ||

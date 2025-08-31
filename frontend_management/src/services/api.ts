@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 function mapOrder(row: any): Order {
   return {
     id: String(row.id),
+    orderNumber: row.order_number || (row.id != null ? `ORD-${row.id}` : undefined),
     status: row.status && row.status.toLowerCase() === 'completed' ? 'Completed' : 'Pending',
     type: row.order_type === 'quick' ? 'quick-sale' : 'regular',
     createdAt: row.created_at,
@@ -21,6 +22,8 @@ function mapOrder(row: any): Order {
     suggestedSellingPrice: row.suggested_selling_price !== null && row.suggested_selling_price !== undefined ? Number(row.suggested_selling_price) : undefined,
     paymentMethod: row.payment_method || undefined,
     paymentTerms: row.payment_terms || undefined,
+    fees: row.fees !== null && row.fees !== undefined ? Number(row.fees) : undefined,
+    signature: row.signature || undefined,
     driverName: row.driver_name || undefined,
     plateNumber: row.plate_num || undefined,
     phoneNumber: row.driver_phone || undefined,
@@ -80,16 +83,43 @@ export const driversApi = {
   },
 };
 
+// Mirror driver helpers for companies: exact same pattern
+export const companiesApi = {
+  async list(): Promise<{ id: number; name: string; address: string | null }[]> {
+    const data = await fetchJSON(`${API_BASE}/api/companies`);
+    return Array.isArray(data) ? data : [];
+  },
+
+  async searchCompanies(prefix: string): Promise<{ id: string; name: string; address?: string }[]> {
+    if (!prefix || prefix.length < 1) return [];
+    const data = await fetchJSON(`${API_BASE}/api/companies`);
+    return data
+      .filter((c: any) => c.name.toLowerCase().includes(prefix.toLowerCase()))
+      .slice(0, 10)
+      .map((c: any) => ({ id: String(c.id), name: c.name, address: c.address || undefined }));
+  },
+
+  async findCompanyByNameExact(name: string): Promise<{ id: string; name: string; address?: string } | undefined> {
+    const data = await fetchJSON(`${API_BASE}/api/companies`);
+    const c = data.find((co: any) => co.name.toLowerCase() === name.toLowerCase());
+    return c ? { id: String(c.id), name: c.name, address: c.address || undefined } : undefined;
+  },
+
+  async upsertCompany(companyData: { name: string; address?: string }): Promise<{ id: string; name: string; address?: string } > {
+    const data = await fetchJSON(`${API_BASE}/api/companies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: companyData.name, address: companyData.address || null }),
+    });
+    return { id: String(data.id), name: data.name, address: data.address || undefined };
+  },
+};
+
 async function findOrCreateCompany(name: string, address?: string): Promise<number> {
-  const list = await fetchJSON(`${API_BASE}/api/companies`);
-  const existing = list.find((c: any) => c.name.toLowerCase() === name.toLowerCase());
-  if (existing) return existing.id;
-  const data = await fetchJSON(`${API_BASE}/api/companies`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, address }),
-  });
-  return data.id;
+  const existing = await companiesApi.findCompanyByNameExact(name);
+  if (existing) return Number(existing.id);
+  const created = await companiesApi.upsertCompany({ name, address });
+  return Number(created.id);
 }
 
 export const ordersApi = {
@@ -108,6 +138,7 @@ export const ordersApi = {
       const q = filters.q.toLowerCase();
       orders = orders.filter(o =>
         o.id.toLowerCase().includes(q) ||
+        (o.orderNumber || '').toLowerCase().includes(q) ||
         o.customerName.toLowerCase().includes(q) ||
         o.productName.toLowerCase().includes(q) ||
         o.driverName?.toLowerCase().includes(q) ||
@@ -151,10 +182,18 @@ export const ordersApi = {
     const payload: any = {};
 
     if (patch.customerName) {
-      payload.customer_id = await findOrCreateCompany(patch.customerName, patch.customerAddress);
+      let company = await companiesApi.findCompanyByNameExact(patch.customerName);
+      if (!company) {
+        company = await companiesApi.upsertCompany({ name: patch.customerName, address: patch.customerAddress });
+      }
+      payload.customer_id = company.id;
     }
     if (patch.supplierName) {
-      payload.supplier_id = await findOrCreateCompany(patch.supplierName);
+      let company = await companiesApi.findCompanyByNameExact(patch.supplierName);
+      if (!company) {
+        company = await companiesApi.upsertCompany({ name: patch.supplierName });
+      }
+      payload.supplier_id = company.id;
     }
     if (patch.driverName) {
       let driver = await driversApi.findDriverByNameExact(patch.driverName);
@@ -239,8 +278,14 @@ export const managementApi = {
       return data.id;
     };
 
-    const customer_id = await findOrCreate(input.customerName, input.customerAddress);
-    const supplier_id = await findOrCreate(input.supplierName);
+    const customer_id = input.customerName
+      ? Number((await (companiesApi.findCompanyByNameExact(input.customerName) || Promise.resolve(undefined)))?.id
+        ?? (await companiesApi.upsertCompany({ name: input.customerName, address: input.customerAddress })).id)
+      : null;
+    const supplier_id = input.supplierName
+      ? Number((await (companiesApi.findCompanyByNameExact(input.supplierName) || Promise.resolve(undefined)))?.id
+        ?? (await companiesApi.upsertCompany({ name: input.supplierName })).id)
+      : null;
 
     const order_number = `ORD-${Date.now()}`;
     const balance_id = input.balanceId || `BAL-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -276,8 +321,24 @@ export const managementApi = {
 
   async updateOrder(id: string, input: Partial<NewOrderInput>): Promise<void> {
     const payload: any = {};
-    if (input.customerName !== undefined) payload.customer_id = await findOrCreateCompany(input.customerName!, input.customerAddress);
-    if (input.supplierName !== undefined) payload.supplier_id = await findOrCreateCompany(input.supplierName!);
+    if (input.customerName !== undefined) {
+      if (input.customerName) {
+        let c = await companiesApi.findCompanyByNameExact(input.customerName);
+        if (!c) c = await companiesApi.upsertCompany({ name: input.customerName, address: input.customerAddress });
+        payload.customer_id = c.id;
+      } else {
+        payload.customer_id = null;
+      }
+    }
+    if (input.supplierName !== undefined) {
+      if (input.supplierName) {
+        let s = await companiesApi.findCompanyByNameExact(input.supplierName);
+        if (!s) s = await companiesApi.upsertCompany({ name: input.supplierName });
+        payload.supplier_id = s.id;
+      } else {
+        payload.supplier_id = null;
+      }
+    }
     if (input.numBags !== undefined) payload.num_bags = input.numBags;
     if (input.product !== undefined) payload.product = input.product;
     if (input.balanceId !== undefined) payload.balance_id = input.balanceId;

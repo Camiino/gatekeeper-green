@@ -266,7 +266,6 @@ export default function OrdersPage() {
               <CompanyAutocomplete value={form.supplierName} onChange={(name) => setForm({ ...form, supplierName: name })} placeholder="Select or type supplier" />
             </div>
             <div>
-              <Label>Driver</Label>
               <DriverAutocomplete value={form.driverName || ''} onChange={handleDriverChange} />
             </div>
             <div>

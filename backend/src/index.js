@@ -240,7 +240,7 @@ app.post("/api/orders", async (req, res) => {
   try {
     // Compute sequential numbers if not provided
     const ordNum = order_number || (await nextCode("ORD", 4, "order_number"));
-    const balId = balance_id || (await nextCode("BAL", 4, "balance_id"));
+    const balId = balance_id || null; // no longer auto-generate balance IDs
 
     const cols = [
       'order_number','customer_id','supplier_id','driver_id',

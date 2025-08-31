@@ -446,25 +446,10 @@ export default function OrderViewPage() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="balance-id">Balance ID</Label>
-                  {order.type === 'quick-sale' ? (
-                    <div className="space-y-1">
-                      <Input
-                        id="balance-id"
-                        value={order.balanceId}
-                        onChange={(e) => updateOrder({ balanceId: e.target.value })}
-                        className={`hgm-input mt-1 ${validationErrors.balanceId ? 'border-destructive' : ''}`}
-                        placeholder="Enter balance ID"
-                      />
-                      {validationErrors.balanceId && (
-                        <p className="text-sm text-destructive">{validationErrors.balanceId}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
-                      {order.balanceId}
-                    </div>
-                  )}
+                  <Label>Order ID</Label>
+                  <div className="mt-1 p-3 bg-muted text-muted-foreground rounded-md cursor-default">
+                    {order.orderNumber || `ORD-${order.id}`}
+                  </div>
                 </div>
                 
                 <div>

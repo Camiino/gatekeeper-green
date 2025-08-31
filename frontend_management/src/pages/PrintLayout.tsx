@@ -71,10 +71,10 @@ export default function PrintLayout() {
       case 'balance-card':
         return (
           <div className="space-y-6">
-            {/* Balance ID Section */}
+            {/* Order ID Section */}
             <div className="text-center border-2 border-primary p-4 rounded-lg bg-accent">
-              <h3 className="text-lg font-bold text-primary mb-2">Balance ID</h3>
-              <div className="text-2xl font-bold">{order.balanceId}</div>
+              <h3 className="text-lg font-bold text-primary mb-2">Order ID</h3>
+              <div className="text-2xl font-bold">{order.orderNumber || `ORD-${order.id}`}</div>
             </div>
 
             {/* Customer & Basic Info */}

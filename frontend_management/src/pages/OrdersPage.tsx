@@ -204,8 +204,7 @@ export default function OrdersPage() {
                       <TableHead>Customer</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Bags</TableHead>
-                      <TableHead>Balance ID</TableHead>
-                      <TableHead>Created</TableHead>
+                                  <TableHead>Created</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -226,7 +225,6 @@ export default function OrdersPage() {
                         <TableCell>{order.customerName}</TableCell>
                         <TableCell>{order.productName}</TableCell>
                         <TableCell>{order.bagsCount}</TableCell>
-                        <TableCell>{order.balanceId}</TableCell>
                         <TableCell>{formatDate(order.createdAt)}</TableCell>
                         <TableCell>
                           <StatusBadge status={order.status} />
@@ -306,7 +304,7 @@ export default function OrdersPage() {
                 <UiSelectTrigger className="hgm-input"><UiSelectValue /></UiSelectTrigger>
                 <UiSelectContent>
                   <UiSelectItem value="kg">kg</UiSelectItem>
-                  <UiSelectItem value="bag">bag</UiSelectItem>
+                  <UiSelectItem value="ton">ton</UiSelectItem>
                 </UiSelectContent>
               </UiSelect>
             </div>

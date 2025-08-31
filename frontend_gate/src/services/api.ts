@@ -208,3 +208,93 @@ export const ordersApi = {
   },
 };
 
+
+
+// Companies helper (mirror driver pattern)
+export const companiesApi = {
+  async searchCompanies(prefix: string): Promise<{ id: string; name: string; address?: string }[]> {
+    if (!prefix || prefix.length < 1) return [];
+    const data = await fetchJSON(`${API_BASE}/api/companies`);
+    return data
+      .filter((c: any) => c.name.toLowerCase().includes(prefix.toLowerCase()))
+      .slice(0, 10)
+      .map((c: any) => ({ id: String(c.id), name: c.name, address: c.address || undefined }));
+  },
+  async findCompanyByNameExact(name: string): Promise<{ id: string; name: string; address?: string } | undefined> {
+    const data = await fetchJSON(`${API_BASE}/api/companies`);
+    const c = data.find((co: any) => co.name.toLowerCase() === name.toLowerCase());
+    return c ? { id: String(c.id), name: c.name, address: c.address || undefined } : undefined;
+  },
+  async upsertCompany(companyData: { name: string; address?: string }): Promise<{ id: string; name: string; address?: string } > {
+    const data = await fetchJSON(`${API_BASE}/api/companies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: companyData.name, address: companyData.address || null }),
+    });
+    return { id: String(data.id), name: data.name, address: data.address || undefined };
+  },
+};
+
+export type NewOrderInput = {
+  customerName?: string;
+  supplierName?: string;
+  numBags?: number;
+  product?: 'flour' | 'bran' | 'shawa2ib';
+  pricePerUnit?: number;
+  quantity?: number;
+  unit?: string; // 'kg' | 'ton'
+  totalPrice?: number;
+  suggestedSellingPrice?: number;
+  paymentMethod?: 'cash' | 'card' | 'transfer' | 'other';
+  paymentTerms?: 'now' | 'installments' | 'later';
+  signature?: string;
+  customerAddress?: string;
+  fees?: number;
+  driverName?: string;
+  phoneNumber?: string;
+  plateNumber?: string;
+  firstWeightKg?: number;
+  firstWeightTimestamp?: string;
+  secondWeightKg?: number;
+  secondWeightTimestamp?: string;
+};
+
+export const gateManagementApi = {
+  async createQuickSale(input: NewOrderInput): Promise<{ id: number; order_number: string }> {
+    const resolveCompany = async (name?: string, address?: string) => {
+      if (!name) return null;
+      let c = await companiesApi.findCompanyByNameExact(name);
+      if (!c) c = await companiesApi.upsertCompany({ name, address });
+      return Number(c.id);
+    };
+    const customer_id = await resolveCompany(input.customerName, input.customerAddress);
+    const supplier_id = await resolveCompany(input.supplierName);
+    const payload: any = {
+      customer_id,
+      supplier_id,
+      num_bags: input.numBags ?? null,
+      plate_num: input.plateNumber ?? null,
+      product: input.product ?? null,
+      order_type: 'quick',
+      customer_address: input.customerAddress ?? null,
+      fees: input.fees ?? null,
+      unit: input.unit ?? 'kg',
+      price: input.pricePerUnit ?? null,
+      quantity: input.quantity ?? null,
+      total_price: input.totalPrice ?? (input.pricePerUnit && input.quantity ? input.pricePerUnit * input.quantity : null),
+      suggested_selling_price: input.suggestedSellingPrice ?? null,
+      payment_method: input.paymentMethod ?? null,
+      payment_terms: input.paymentTerms ?? null,
+      signature: input.signature ?? null,
+      status: 'pending',
+      first_weight_time: input.firstWeightTimestamp ?? null,
+      first_weight_kg: input.firstWeightKg ?? null,
+      second_weight_time: input.secondWeightTimestamp ?? null,
+      second_weight_kg: input.secondWeightKg ?? null,
+    };
+    const data = await fetchJSON(`${API_BASE}/api/orders`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    return data;
+  },
+};

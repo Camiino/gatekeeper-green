@@ -7,13 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
-import { ordersApi } from '@/services/api';
+import { ordersApi, gateManagementApi, NewOrderInput } from '@/services/api';
 import { Order, SearchFilters } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select as UiSelect, SelectContent as UiSelectContent, SelectItem as UiSelectItem, SelectTrigger as UiSelectTrigger, SelectValue as UiSelectValue } from '@/components/ui/select';
+import CompanyAutocomplete from '@/components/CompanyAutocomplete';
+import DriverAutocomplete from '@/components/DriverAutocomplete';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<SearchFilters>({ status: 'Pending' });
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState<NewOrderInput>({ unit: 'kg', paymentMethod: 'cash', paymentTerms: 'now' });
 
   const loadOrders = async () => {
     setLoading(true);
@@ -47,6 +55,22 @@ export default function OrdersPage() {
     });
   };
 
+  const handleDriverChange = (name: string, phone?: string) => {
+    setForm(prev => ({ ...prev, driverName: name, phoneNumber: phone ?? prev.phoneNumber }));
+  };
+
+  const handleCreate = async () => {
+    setCreating(true);
+    try {
+      await gateManagementApi.createQuickSale(form);
+      setShowCreate(false);
+      setForm({ unit: 'kg', paymentMethod: 'cash', paymentTerms: 'now' });
+      await loadOrders();
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -55,6 +79,9 @@ export default function OrdersPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">HGM Gatekeeper</h1>
             <p className="text-muted-foreground mt-1">Order Dashboard</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowCreate(true)}>Create Quick Sale</Button>
           </div>
         </div>
 
@@ -182,8 +209,7 @@ export default function OrdersPage() {
                       <TableHead>Customer</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Bags</TableHead>
-                      <TableHead>Balance ID</TableHead>
-                      <TableHead>Created</TableHead>
+                                  <TableHead>Created</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -204,7 +230,6 @@ export default function OrdersPage() {
                         <TableCell>{order.customerName}</TableCell>
                         <TableCell>{order.productName}</TableCell>
                         <TableCell>{order.bagsCount}</TableCell>
-                        <TableCell>{order.balanceId}</TableCell>
                         <TableCell>{formatDate(order.createdAt)}</TableCell>
                         <TableCell>
                           <StatusBadge status={order.status} />
@@ -226,6 +251,119 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       </div>
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="w-[95vw] md:max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Quick Sale</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Customer Name</Label>
+              <CompanyAutocomplete value={form.customerName} onChange={(name, address) => setForm({ ...form, customerName: name, customerAddress: address ?? form.customerAddress })} placeholder="Select or type customer" />
+            </div>
+            <div>
+              <Label>Supplier</Label>
+              <CompanyAutocomplete value={form.supplierName} onChange={(name) => setForm({ ...form, supplierName: name })} placeholder="Select or type supplier" />
+            </div>
+            <div>
+              <Label>Driver</Label>
+              <DriverAutocomplete value={form.driverName || ''} onChange={handleDriverChange} />
+            </div>
+            <div>
+              <Label>Plate Number</Label>
+              <Input value={form.plateNumber || ''} onChange={(e) => setForm({ ...form, plateNumber: e.target.value })} />
+            </div>
+            <div>
+              <Label>Product</Label>
+              <UiSelect value={(form.product as any) || ''} onValueChange={(v) => setForm({ ...form, product: v as any })}>
+                <UiSelectTrigger className="hgm-input"><UiSelectValue placeholder="Select product" /></UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem value="flour">Flour</UiSelectItem>
+                  <UiSelectItem value="bran">Bran</UiSelectItem>
+                  <UiSelectItem value="shawa2ib">Shawa2ib</UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
+            </div>
+            <div>
+              <Label>Bags Count</Label>
+              <Input type="number" value={form.numBags ?? ''} onChange={(e) => setForm({ ...form, numBags: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>First Weight (kg)</Label>
+              <Input type="number" step="0.01" value={form.firstWeightKg ?? ''} onChange={(e) => setForm({ ...form, firstWeightKg: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>Second Weight (kg)</Label>
+              <Input type="number" step="0.01" value={form.secondWeightKg ?? ''} onChange={(e) => setForm({ ...form, secondWeightKg: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>Unit</Label>
+              <UiSelect value={form.unit || 'kg'} onValueChange={(v) => setForm({ ...form, unit: v })}>
+                <UiSelectTrigger className="hgm-input"><UiSelectValue /></UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem value="kg">kg</UiSelectItem>
+                  <UiSelectItem value="ton">ton</UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
+            </div>
+            <div>
+              <Label>Price per unit</Label>
+              <Input type="number" step="0.01" value={form.pricePerUnit ?? ''} onChange={(e) => setForm({ ...form, pricePerUnit: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>Quantity</Label>
+              <Input type="number" step="0.01" value={form.quantity ?? ''} onChange={(e) => setForm({ ...form, quantity: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>Total Price</Label>
+              <Input type="number" step="0.01" value={form.totalPrice ?? (form.pricePerUnit && form.quantity ? form.pricePerUnit * form.quantity : '')} onChange={(e) => setForm({ ...form, totalPrice: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>Suggested Selling price</Label>
+              <Input type="number" step="0.01" value={form.suggestedSellingPrice ?? ''} onChange={(e) => setForm({ ...form, suggestedSellingPrice: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div>
+              <Label>Payment Method</Label>
+              <UiSelect value={form.paymentMethod || 'cash'} onValueChange={(v) => setForm({ ...form, paymentMethod: v as any })}>
+                <UiSelectTrigger className="hgm-input"><UiSelectValue /></UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem value="cash">Cash</UiSelectItem>
+                  <UiSelectItem value="card">Card</UiSelectItem>
+                  <UiSelectItem value="transfer">Transfer</UiSelectItem>
+                  <UiSelectItem value="other">Other</UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
+            </div>
+            <div>
+              <Label>Payment Terms</Label>
+              <UiSelect value={form.paymentTerms || 'now'} onValueChange={(v) => setForm({ ...form, paymentTerms: v as any })}>
+                <UiSelectTrigger className="hgm-input"><UiSelectValue /></UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem value="now">Now</UiSelectItem>
+                  <UiSelectItem value="installments">Installments</UiSelectItem>
+                  <UiSelectItem value="later">Later</UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
+            </div>
+            <div className="md:col-span-2">
+              <Label>Customer Address</Label>
+              <Input value={form.customerAddress || ''} onChange={(e) => setForm({ ...form, customerAddress: e.target.value })} />
+            </div>
+            <div>
+              <Label>Fees</Label>
+              <Input type="number" step="0.01" value={form.fees ?? ''} onChange={(e) => setForm({ ...form, fees: e.target.value ? Number(e.target.value) : undefined })} />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Signature</Label>
+              <Input value={form.signature || ''} onChange={(e) => setForm({ ...form, signature: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-4">
+            <Button onClick={handleCreate} disabled={creating}>{creating ? 'Creating...' : 'Create'}</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

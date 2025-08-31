@@ -522,7 +522,7 @@ export default function OrderViewPage() {
                     <SelectTrigger className="hgm-input"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="bag">bag</SelectItem>
+                      <SelectItem value="ton">ton</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (

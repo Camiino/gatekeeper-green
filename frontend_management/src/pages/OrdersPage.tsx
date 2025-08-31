@@ -7,18 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
-import { ordersApi } from '@/services/mockApi';
+import { ordersApi, managementApi, NewOrderInput } from '@/services/api';
 import { Order, SearchFilters } from '@/types';
-
-const FILTERS_KEY = 'hgm_order_filters';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import OrderForm from '@/components/OrderForm';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<SearchFilters>(() => {
-    const saved = localStorage.getItem(FILTERS_KEY);
-    return saved ? JSON.parse(saved) : { status: 'Pending' };
-  });
+  const [filters, setFilters] = useState<SearchFilters>({ status: 'Pending' });
+  const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<Order | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const loadOrders = async () => {
     setLoading(true);
@@ -34,7 +35,6 @@ export default function OrdersPage() {
 
   useEffect(() => {
     loadOrders();
-    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
   }, [filters]);
 
   const handleFilterChange = (key: keyof SearchFilters, value: string) => {
@@ -53,6 +53,23 @@ export default function OrdersPage() {
     });
   };
 
+  const createSubmit = async (payload: NewOrderInput) => {
+    setError(null); setSuccess(null);
+    const created = await managementApi.createOrder(payload);
+    setSuccess(`Order created: ${created.order_number}`);
+    setShowCreate(false);
+    await loadOrders();
+  };
+
+  const editSubmit = async (payload: NewOrderInput) => {
+    if (!editing) return;
+    setError(null); setSuccess(null);
+    await managementApi.updateOrder(editing.id, payload);
+    setSuccess(`Order ${editing.id} updated`);
+    setEditing(null);
+    await loadOrders();
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -61,6 +78,9 @@ export default function OrdersPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">HGM Gatekeeper</h1>
             <p className="text-muted-foreground mt-1">Order Dashboard</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowCreate(true)}>Create Order</Button>
           </div>
         </div>
 
@@ -161,6 +181,8 @@ export default function OrdersPage() {
         <Card>
           <CardHeader>
             <CardTitle>Orders ({orders.length})</CardTitle>
+            {error && <div className="text-red-600 text-sm">{error}</div>}
+            {success && <div className="text-green-700 text-sm">{success}</div>}
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -215,13 +237,19 @@ export default function OrdersPage() {
                         <TableCell>
                           <StatusBadge status={order.status} />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="space-x-2">
                           <Button asChild variant="outline" size="sm">
                             <Link to={`/orders/${order.id}`}>
                               <Eye className="h-4 w-4 mr-2" />
                               View
                             </Link>
                           </Button>
+                          <Button variant="outline" size="sm" onClick={() => setEditing(order)}>Edit</Button>
+                          <Button variant="destructive" size="sm" onClick={async () => {
+                            if (!confirm(`Delete order ${order.id}?`)) return;
+                            try { await managementApi.deleteOrder(order.id); await loadOrders(); }
+                            catch (e: any) { setError(e.message || 'Delete failed'); }
+                          }}>Delete</Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -232,6 +260,25 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       </div>
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Create Order</DialogTitle>
+          </DialogHeader>
+          <OrderForm mode="create" onSubmit={async (p) => { await createSubmit(p); }} onCancel={() => setShowCreate(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) setEditing(null); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Order {editing?.id}</DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <OrderForm mode="edit" initial={editing} onSubmit={async (p) => { await editSubmit(p); }} onCancel={() => setEditing(null)} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

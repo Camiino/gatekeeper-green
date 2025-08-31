@@ -14,6 +14,13 @@ export type Order = {
   productName: string;
   balanceId: string;
   customerAddress: string;
+  unit?: string;
+  pricePerUnit?: number;
+  quantity?: number;
+  totalPrice?: number;
+  suggestedSellingPrice?: number;
+  paymentMethod?: 'cash' | 'card' | 'transfer' | 'other';
+  paymentTerms?: 'now' | 'installments' | 'later';
 
   // editable (gate)
   driverName?: string;
